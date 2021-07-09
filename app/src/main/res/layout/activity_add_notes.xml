@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".add_notes"
+    android:orientation="vertical"
+    >
+
+    <EditText
+        android:id="@+id/edittitle"
+        android:layout_width="wrap_content"
+        android:layout_height="46dp"
+        android:layout_marginTop="15dp"
+        android:background="@drawable/borders"
+        android:hint="Title"
+        android:paddingLeft="10dp"
+        android:paddingRight="10dp"
+        android:singleLine="false"
+        android:layout_marginLeft="10dp"
+        android:minWidth="390dp"
+        />
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginLeft="10dp"
+        android:layout_marginRight="10dp"
+        >
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            >
+
+
+            <EditText
+                android:id="@+id/editnotes"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingLeft="20dp"
+                android:background="@drawable/borders"
+                android:layout_marginTop="15dp"
+                android:height="300dp"
+                android:singleLine="false"
+                android:hint="Text"
+
+                />
+            <CheckBox
+                android:id="@+id/stay"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Stay on the page"
+                android:layout_marginTop="20dp"
+
+                />
+
+            <Button
+                android:id="@+id/ocr"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Scan Your Text"
+                android:layout_gravity="center"
+                android:layout_marginTop="20dp"
+                android:background="@color/orange"
+                android:textColor="@color/colorwhite"
+                android:paddingRight="10dp"
+                android:paddingLeft="10dp"
+                />
+
+            <Button
+                android:id="@+id/save"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Save"
+                android:layout_gravity="center"
+                android:layout_marginTop="40dp"
+                android:background="@color/orange"
+                android:textColor="@color/colorwhite"
+                />
+
+
+
+        </LinearLayout>
+    </ScrollView>
+
+
+</LinearLayout>
