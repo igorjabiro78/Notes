@@ -20,8 +20,9 @@ import javax.sql.DataSource;
 public class databaseHelper extends SQLiteOpenHelper {
 
     public static final String notes_table = "notes_table";
-    public static final String titles = "titles";
+
     public static final String mynotes = "text";
+    public static final String titles = "title";
     public static final String noteid = "id";
     public static final String Database_name = "notes.db";
     public static final String Drop_Table = "drop table if exists "+notes_table;
@@ -34,42 +35,39 @@ public class databaseHelper extends SQLiteOpenHelper {
 
     @Override
     public void onCreate(SQLiteDatabase db) {
-       String createTableStatement= "CREATE TABLE "+notes_table+"("+noteid + " INTEGER PRIMARY KEY AUTOINCREMENT, "+titles+"TEXT,"+
-                                                                 mynotes+" TEXT)";
-       db.execSQL(createTableStatement);
+        String createTableStatement= " CREATE TABLE " + notes_table + "(" + noteid + " INTEGER PRIMARY KEY AUTOINCREMENT, " + titles + " TEXT, "+
+                mynotes + " TEXT)";
+
+        db.execSQL(createTableStatement);
 //        db.insert(Database_name,null, DataSource.getDefaultCategory());
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-      try{
-          Toast.makeText(context,"on upgrade called",Toast.LENGTH_SHORT).show();
-           db.execSQL(Drop_Table);
-           onCreate(db);
-      }
-      catch (SQLException e){
-          Toast.makeText(context,""+e,Toast.LENGTH_SHORT).show();
-      }
+        try{
+            Toast.makeText(context,"on upgrade called",Toast.LENGTH_SHORT).show();
+            db.execSQL(Drop_Table);
+            onCreate(db);
+        }
+        catch (SQLException e){
+            Toast.makeText(context,""+e,Toast.LENGTH_SHORT).show();
+        }
     }
 
-    public  boolean addNotes(Notes notes){
-     SQLiteDatabase db= this.getWritableDatabase();
+    public  void addNotes(Notes notes){
+
+        SQLiteDatabase db= this.getWritableDatabase();
         ContentValues cv = new ContentValues();
 
         cv.put(mynotes, notes.getText());
         cv.put(titles, notes.getTitles());
+        db.insert(notes_table, null, cv);
+        db.close();
 
-        long insert = db.insert(notes_table, null, cv);
-        if(insert==-1){
-            return false;
-        }
-        else{
-            return true;
-        }
 
     }
 
-//
+    //
 //
 //
 //    public boolean DeleteNotes(Notes notes){
@@ -92,7 +90,7 @@ public class databaseHelper extends SQLiteOpenHelper {
         sqLiteDatabase.close();
     }
 
-//
+    //
 //
     public ArrayList<Notes> getAll() {
         ArrayList<Notes> returnList = new ArrayList<>();
@@ -113,13 +111,13 @@ public class databaseHelper extends SQLiteOpenHelper {
         }
         else {
         }
-            cursor.close();
-            db.close();
+        cursor.close();
+        db.close();
 
-       return returnList;
+        return returnList;
     }
 
-//
+    //
 //
 //
     public void updateCourse(Notes notes) {

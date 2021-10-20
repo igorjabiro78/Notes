@@ -1,6 +1,7 @@
 package com.example.notes;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.fragment.app.FragmentTransaction;
 
 import android.app.AlarmManager;
 import android.app.DatePickerDialog;
@@ -19,8 +20,8 @@ import android.widget.TextView;
 import android.widget.TimePicker;
 import android.widget.Toast;
 
-import com.example.notes.Database_for_notification.DatabaseClass;
-import com.example.notes.Database_for_notification.EntityClass;
+import com.example.notes.Database.ReminderDatabase;
+
 
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -35,7 +36,7 @@ public class date_picker extends AppCompatActivity implements View.OnClickListen
     String timeTonotify;
     private EditText etTime,etDate,message;
 
-    DatabaseClass databaseClass;
+    ReminderDatabase reminderDatabase;
 
     DatePickerDialog.OnDateSetListener setListener;
 
@@ -53,7 +54,9 @@ public class date_picker extends AppCompatActivity implements View.OnClickListen
         setnotification.setOnClickListener(this);
         etTime.setOnClickListener(this);
         etDate.setOnClickListener(this);
-        databaseClass = DatabaseClass.getDatabase(getApplicationContext());
+
+
+        reminderDatabase = new ReminderDatabase(this);
 
 
         Calendar calendar = Calendar.getInstance();
@@ -72,39 +75,39 @@ public class date_picker extends AppCompatActivity implements View.OnClickListen
 //                datePickerDialog.show();
 //            }
 //        });
-      setListener = new DatePickerDialog.OnDateSetListener() {
-          @Override
-          public void onDateSet(DatePicker view, int year, int month, int dayOfMonth) {
-              month = month+1;
-              String date = day+"/"+month+"/"+year;
-              etDate.setText(date);
-          }
-      };
-      etDate.setOnClickListener(new View.OnClickListener() {
-          @Override
-          public void onClick(View v) {
-              DatePickerDialog datePickerDialog = new DatePickerDialog(date_picker.this, new DatePickerDialog.OnDateSetListener() {
-                  @Override
-                  public void onDateSet(DatePicker view, int year, int month, int dayOfMonth) {
-                      month = month+1;
-                      String date = day+"/"+month+"/"+year;
-                      etDate.setText(date);
-                  }
-              },year,month,day);
-              datePickerDialog.show();
+        setListener = new DatePickerDialog.OnDateSetListener() {
+            @Override
+            public void onDateSet(DatePicker view, int year, int month, int dayOfMonth) {
+                month = month+1;
+                String date = day+"/"+month+"/"+year;
+                etDate.setText(date);
+            }
+        };
+        etDate.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                DatePickerDialog datePickerDialog = new DatePickerDialog(date_picker.this, new DatePickerDialog.OnDateSetListener() {
+                    @Override
+                    public void onDateSet(DatePicker view, int year, int month, int dayOfMonth) {
+                        month = month+1;
+                        String date = day+"/"+month+"/"+year;
+                        etDate.setText(date);
+                    }
+                },year,month,day);
+                datePickerDialog.show();
 
-          }
-      });
+            }
+        });
     }
 
     @Override
     public void onClick(View v) {
-     if (v == etTime) {
+        if (v == etTime) {
             selectTime();
         } else if (v == etDate) {
             selectDate();
         } else if (v == setnotification){
-         submit();
+            submit();
         }
     }
 
@@ -116,15 +119,19 @@ public class date_picker extends AppCompatActivity implements View.OnClickListen
             if (etTime.getText().toString().equals("Select Time") || etDate.getText().toString().equals("Select date")) {
                 Toast.makeText(this, "Please select date and time", Toast.LENGTH_SHORT).show();
             } else {
-                EntityClass entityClass = new EntityClass();
+                ReminderClass remClass = new ReminderClass();
                 String value = (message.getText().toString().trim());
                 String date = (etDate.getText().toString().trim());
                 String time = (etTime.getText().toString().trim());
-                entityClass.setEventdate(date);
-                entityClass.setEventname(value);
-                entityClass.setEventtime(time);
-                databaseClass.EventDao().insertAll(entityClass);
+                remClass.setEvent(date);
+                remClass.setDate(value);
+                remClass.setTime(time);
+//                reminderDatabase.insertAll(remClass);
+                reminderDatabase.addReminder(value,date,time);
                 setAlarm(value, date, time);
+
+                FragmentTransaction transission = getSupportFragmentManager().beginTransaction();
+                transission.replace(R.id.rlayoutreminder,new ReminderFragment()).commit();
             }
         }
     }

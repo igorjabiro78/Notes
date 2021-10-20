@@ -15,8 +15,8 @@ import android.widget.Toast;
 public class Login extends AppCompatActivity {
 
     public Button login;
-    public TextView createAccount;
-    public EditText izina,password;
+    public TextView createAccount,forgotPassword;
+    public EditText email,password;
 
 
 
@@ -25,31 +25,39 @@ public class Login extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
 
-        izina = findViewById(R.id.loginame);
-        password = findViewById(R.id.loginpassword);
-
+        email = findViewById(R.id.email);
+        password = findViewById(R.id.password);
+        forgotPassword = findViewById(R.id.forgot);
         createAccount = findViewById(R.id.create);
+
         login = findViewById(R.id.login);
 
 
-      login.setOnClickListener(new View.OnClickListener() {
-          @Override
-          public void onClick(View view) {
-              // call add_notes
-              if (izina.getText().toString().trim().isEmpty() || password.getText().toString().isEmpty()) {
-                  Toast.makeText(getApplicationContext(), "All fields are required", Toast.LENGTH_LONG).show();
-              } else {
-                  add_notes.Login(getApplicationContext(), izina.getText().toString().trim(), password.getText().toString().trim());
-              }
-          }
-      });
+        login.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                // call add_notes
+                if (email.getText().toString().trim().isEmpty() || password.getText().toString().isEmpty()) {
+                    Toast.makeText(getApplicationContext(), "All fields are required", Toast.LENGTH_LONG).show();
+                } else {
+                    add_notes.Login(getApplicationContext(), email.getText().toString().trim(), password.getText().toString().trim());
+                }
+            }
+        });
 
-      createAccount.setOnClickListener(new View.OnClickListener() {
-          @Override
-          public void onClick(View view) {
-              startActivity(new Intent(Login.this,Sign_Up.class));
-          }
-      });
+        createAccount.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                startActivity(new Intent(Login.this,Sign_Up.class));
+            }
+        });
+
+        forgotPassword.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+            }
+        });
 
     }
 }

@@ -1,8 +1,10 @@
 package com.example.notes;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -13,13 +15,14 @@ import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import com.android.volley.AuthFailureError;
+import com.android.volley.DefaultRetryPolicy;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
-import com.example.notes.Database.DataSource;
 import com.example.notes.Database.databaseHelper;
 import com.google.android.gms.common.api.CommonStatusCodes;
 import com.google.android.material.snackbar.Snackbar;
@@ -28,19 +31,34 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class add_notes extends AppCompatActivity {
     public Button save, ocr;
     public CheckBox stay;
     public EditText mynotes, title;
     public Context ctx;
 
-     databaseHelper databasehelper;
+    //added code
+    AlertDialog.Builder builder;
+    String server_url = "http://10.140.142.105/www/Connotes.php";
+    private RequestQueue requestQueue;
+    private String tag_json_obj="json_obj_req";
+    private String tag_success="success",tag_message="message";
+    private int success;
+
+    databaseHelper databasehelper;
     private static final int RC_OCR_CAPTURE = 1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_add_notes);
+        databasehelper = new databaseHelper(this);
+
+        // builder dialog
+        builder = new AlertDialog.Builder(add_notes.this);
 
         save = findViewById(R.id.save);
         mynotes = findViewById(R.id.editnotes);
@@ -48,39 +66,86 @@ public class add_notes extends AppCompatActivity {
         ocr = findViewById(R.id.ocr);
         stay = findViewById(R.id.stay);
 
+        requestQueue = Volley.newRequestQueue(getApplicationContext());
+
         ctx = getApplicationContext();
         save.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-               Notes notes = null;
+                Notes notes = null;
                 try {
-                    Toast.makeText(ctx,"aha nahageze ",Toast.LENGTH_LONG).show();
+//                    Toast.makeText(ctx,"aha nahageze ",Toast.LENGTH_LONG).show();
                     notes = new Notes(-1,mynotes.getText().toString(), title.getText().toString());
-                    if(mynotes.getText().toString().equals("") & title.getText().toString().equals(""))
+                    if(mynotes.getText().toString().equals("") || title.getText().toString().equals(""))
                         Toast.makeText(ctx,"empty",Toast.LENGTH_SHORT).show();
                     else
-                       Toast.makeText(add_notes.this,"saved",Toast.LENGTH_LONG).show();
-                    databasehelper = new databaseHelper(add_notes.this);
-                    databasehelper.addNotes(notes);
+                        Toast.makeText(add_notes.this,"saved",Toast.LENGTH_LONG).show();
+                    addmyTexts(view);
+                    sendData();
+//                    databasehelper = new databaseHelper(add_notes.this);
+//                    databasehelper.addNotes(notes);
                 }
                 catch (Exception e){
                     Toast.makeText(add_notes.this,"Error in adding"+e.getMessage(),Toast.LENGTH_LONG).show();
 
                 }
-               // databasehelper = new databaseHelper(add_notes.this);
+                // databasehelper = new databaseHelper(add_notes.this);
 
-               //d databasehelper.addNotes(notes);
+                //d databasehelper.addNotes(notes);
 
 
 //                saveNotes(notes.getText().toString(), title.getText().toString(),getuserid(ctx));
 
                 if(stay.isChecked()){
-                title.setText("");
-                notes.setText("");
-            } else{
+                    title.setText("");
+                    mynotes.setText("");
+                } else{
                     finish();
                     startActivity(new Intent(ctx,Notes_Tabs.class));
                 }
+
+            // added code to connect to db
+            StringRequest stringRequest = new StringRequest(Request.Method.POST, server_url,
+                    new Response.Listener<String>() {
+                        @Override
+                        public void onResponse(String response) {
+                            builder.setTitle("Server Response");
+                            builder.setMessage("response: "+response);
+                            builder.setPositiveButton("ok", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    title.setText("");
+                                    mynotes.setText("");
+                                }
+                            });
+                            AlertDialog alertDialog = builder.create();
+                            alertDialog.show();
+                        }
+                    }
+                    , new Response.ErrorListener() {
+                @Override
+                public void onErrorResponse(VolleyError error) {
+
+                    Toast.makeText(add_notes.this,"Error..",Toast.LENGTH_LONG).show();
+                    error.printStackTrace();
+
+                }
+            }){
+                @Override
+                protected Map<String, String> getParams() throws AuthFailureError {
+                    Map<String, String> params = new HashMap<>();
+                    params.put("title",title.getText().toString());
+                    params.put("text",mynotes.getText().toString());
+
+                    return params;
+                }
+            };
+
+              MySingleton.getInstance(add_notes.this).addToRequestque(stringRequest);
+
+
+
+
             }
         });
         ocr.setOnClickListener(new View.OnClickListener() {
@@ -100,19 +165,56 @@ public class add_notes extends AppCompatActivity {
         String titles = title.getText().toString();
         String text =mynotes.getText().toString();
         Notes notes = new Notes(1,titles,text);
-        boolean id = databasehelper.addNotes(notes);
-        if(id){
-            Toast.makeText(ctx,"successfull",Toast.LENGTH_SHORT).show();
-        }
-        else{
-            Toast.makeText(ctx,"successfull",Toast.LENGTH_SHORT).show();
-        }
+        databasehelper.addNotes(notes);
+//
+    }
+
+    private void sendData(){
+        StringRequest stringRequest = new StringRequest(Request.Method.POST, server_url,
+                new Response.Listener<String>() {
+                    @Override
+                    public void onResponse(String response) {
+                        try{
+                            JSONObject jsonObject= new JSONObject(response);
+                            success = jsonObject.getInt(tag_success);
+                            if(success == 1){
+                                Toast.makeText(add_notes.this,jsonObject.getString(tag_message),Toast.LENGTH_SHORT).show();
+                            }
+                            else{
+                                Toast.makeText(add_notes.this,jsonObject.getString(tag_message),Toast.LENGTH_SHORT).show();
+                            }
+                        } catch (JSONException e) {
+                            Toast.makeText(add_notes.this,"Error Occured",Toast.LENGTH_SHORT).show();
+                        }
+
+                    }
+                }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+
+                Toast.makeText(add_notes.this,error.getMessage(),Toast.LENGTH_LONG).show();
+                error.printStackTrace();
+            }
+        })
+        {
+            @Override
+            protected Map<String, String> getParams() throws AuthFailureError {
+                Map<String, String> params = new HashMap<>();
+                params.put("title",title.getText().toString());
+                params.put("text",mynotes.getText().toString());
+
+                return params;
+            }
+        };
+        stringRequest.setRetryPolicy(new DefaultRetryPolicy(1000,1,1.0f));
+        requestQueue.add(stringRequest);
+
+        MySingleton.getInstance(add_notes.this).addToRequestque(stringRequest);
     }
 
 
+
     void saveNotes(String text, String title, String id) {
-
-
 
         RequestQueue queue = Volley.newRequestQueue(add_notes.this);
         String url = "http://192.168.43.242/www/Notes%20Project/access_Method/note_access_method.php?category=insertNotes&note= " + text + "&title=" + title+"&useid="+id;
