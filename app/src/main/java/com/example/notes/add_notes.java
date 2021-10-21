@@ -7,6 +7,9 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.database.sqlite.SQLiteDatabase;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -34,6 +37,9 @@ import org.json.JSONObject;
 import java.util.HashMap;
 import java.util.Map;
 
+import static com.example.notes.Database.databaseHelper.sync_status_failed;
+import static com.example.notes.Database.databaseHelper.sync_status_ok;
+
 public class add_notes extends AppCompatActivity {
     public Button save, ocr;
     public CheckBox stay;
@@ -42,7 +48,7 @@ public class add_notes extends AppCompatActivity {
 
     //added code
     AlertDialog.Builder builder;
-    String server_url = "http://10.140.142.105/www/Connotes.php";
+    public static String server_url = "http://10.0.2.2/Connotes.php";
     private RequestQueue requestQueue;
     private String tag_json_obj="json_obj_req";
     private String tag_success="success",tag_message="message";
@@ -72,29 +78,25 @@ public class add_notes extends AppCompatActivity {
         save.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Notes notes = null;
+
                 try {
-//                    Toast.makeText(ctx,"aha nahageze ",Toast.LENGTH_LONG).show();
-                    notes = new Notes(-1,mynotes.getText().toString(), title.getText().toString());
+
+
                     if(mynotes.getText().toString().equals("") || title.getText().toString().equals(""))
                         Toast.makeText(ctx,"empty",Toast.LENGTH_SHORT).show();
                     else
+                        saveToAppServer(title.getText().toString(),mynotes.getText().toString());
                         Toast.makeText(add_notes.this,"saved",Toast.LENGTH_LONG).show();
-                    addmyTexts(view);
+
+
+                    //to do : check for internet connection  first
                     sendData();
-//                    databasehelper = new databaseHelper(add_notes.this);
-//                    databasehelper.addNotes(notes);
+
                 }
                 catch (Exception e){
                     Toast.makeText(add_notes.this,"Error in adding"+e.getMessage(),Toast.LENGTH_LONG).show();
 
                 }
-                // databasehelper = new databaseHelper(add_notes.this);
-
-                //d databasehelper.addNotes(notes);
-
-
-//                saveNotes(notes.getText().toString(), title.getText().toString(),getuserid(ctx));
 
                 if(stay.isChecked()){
                     title.setText("");
@@ -161,13 +163,87 @@ public class add_notes extends AppCompatActivity {
 
     }
 
-    public void addmyTexts(View view){
-        String titles = title.getText().toString();
-        String text =mynotes.getText().toString();
-        Notes notes = new Notes(1,titles,text);
-        databasehelper.addNotes(notes);
-//
+//    public void addmyTexts(View view){
+//        String titles = title.getText().toString();
+//        String text =mynotes.getText().toString();
+//        Notes notes = new Notes(titles,text,sync_status_failed);
+//        databasehelper.saveToLocalDatabase(titles,text,sy);
+////
+//    }
+
+
+
+    public void saveToAppServer(String title,String name){
+
+        databasehelper = new databaseHelper(ctx);
+        SQLiteDatabase database = databasehelper.getWritableDatabase();
+
+
+
+        if(checkNetworkConnections(ctx)){
+
+            sendData();
+        }
+
+        else{
+            saveToLocalStorages(title,name,sync_status_failed);
+
+        }
+        MainActivity mainActivity = new MainActivity();
+        mainActivity.readFromLocalStorage();
+       databasehelper.close();
+
     }
+
+    public void saveToLocalStorages(String title,String name,int sync){
+
+        databasehelper = new databaseHelper(ctx);
+        SQLiteDatabase database = databasehelper.getWritableDatabase();
+        databasehelper.saveToLocalDatabase(title,name,sync);
+
+        MainActivity mainActivity = new MainActivity();
+        mainActivity.readFromLocalStorage();
+        databasehelper.close();
+
+
+    }
+
+
+
+    public boolean checkNetworkConnection()
+    {
+        ConnectivityManager connectivityManager =  (ConnectivityManager) ctx.getSystemService(Context.CONNECTIVITY_SERVICE);
+        if(connectivityManager.getNetworkInfo(ConnectivityManager.TYPE_MOBILE).getState() == NetworkInfo.State.CONNECTED ||
+                connectivityManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI).getState() == NetworkInfo.State.CONNECTED)
+        {
+            Log.d("application","Network available");
+            return true;
+        }else{
+            Log.d("application","Networrk not available");
+            return false;
+        }
+
+
+    }
+
+    public boolean checkNetworkConnections(Context context)
+    {
+        ConnectivityManager connectivityManager =  (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo networkInfo  =connectivityManager.getActiveNetworkInfo();
+        return(networkInfo!=null && networkInfo.isConnected());
+//        if(connectivityManager.getNetworkInfo(ConnectivityManager.TYPE_MOBILE).getState() == NetworkInfo.State.CONNECTED ||
+//                connectivityManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI).getState() == NetworkInfo.State.CONNECTED)
+//        {
+//            Log.d("application","Network available");
+//            return true;
+//        }else{
+//            Log.d("application","Networrk not available");
+//            return false;
+    }
+
+
+
+
 
     private void sendData(){
         StringRequest stringRequest = new StringRequest(Request.Method.POST, server_url,
@@ -176,15 +252,16 @@ public class add_notes extends AppCompatActivity {
                     public void onResponse(String response) {
                         try{
                             JSONObject jsonObject= new JSONObject(response);
-                            success = jsonObject.getInt(tag_success);
-                            if(success == 1){
-                                Toast.makeText(add_notes.this,jsonObject.getString(tag_message),Toast.LENGTH_SHORT).show();
+                            String Response =jsonObject.getString("response");
+//                            success = jsonObject.getInt(tag_success);
+                            if(Response.equals("OK")){
+                               saveToLocalStorages(title.getText().toString(),mynotes.getText().toString(),sync_status_ok);
                             }
                             else{
-                                Toast.makeText(add_notes.this,jsonObject.getString(tag_message),Toast.LENGTH_SHORT).show();
+                                saveToLocalStorages(title.getText().toString(),mynotes.getText().toString(),sync_status_failed);
                             }
                         } catch (JSONException e) {
-                            Toast.makeText(add_notes.this,"Error Occured",Toast.LENGTH_SHORT).show();
+                            e.printStackTrace();
                         }
 
                     }
@@ -192,8 +269,8 @@ public class add_notes extends AppCompatActivity {
             @Override
             public void onErrorResponse(VolleyError error) {
 
-                Toast.makeText(add_notes.this,error.getMessage(),Toast.LENGTH_LONG).show();
-                error.printStackTrace();
+                saveToLocalStorages(title.getText().toString(),mynotes.getText().toString(),sync_status_failed);
+
             }
         })
         {

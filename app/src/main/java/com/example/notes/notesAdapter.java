@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -19,21 +20,28 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class notesAdapter extends RecyclerView.Adapter<notesAdapter.MyViewHolder> { // adapter idufasha gu settinga content kuma recycle view
 
-    List<Notes> mynotes;
+    private ArrayList<Notes> mynotes = new ArrayList<>();
     RecyclerView rv;
-    private JSONArray savednotes;
+//    private JSONArray savednotes;
     public LinearLayout ln;
     public Context contx;
     public databaseHelper mdatabase;
    // public SQLiteDatabase mDatabase;
 
+
+    public notesAdapter(ArrayList<Notes> arrayList){
+        mynotes = arrayList;
+    }
+
     public static class MyViewHolder extends RecyclerView.ViewHolder {
 
-        public TextView Tvtext, Tvtitle, Tvdate, Tvstat, tvId;
+        public TextView Tvtext, Tvtitle, Tvdate, tvId;
+        ImageView Tvsync;
         public LinearLayout lnyNotes;
 
         public MyViewHolder(LinearLayout lnout) {
@@ -42,10 +50,8 @@ public class notesAdapter extends RecyclerView.Adapter<notesAdapter.MyViewHolder
             Tvtext = lnout.findViewById(R.id.Text);
             Tvtitle = lnout.findViewById(R.id.Title);
             Tvdate = lnout.findViewById(R.id.date);
-            Tvstat = lnout.findViewById(R.id.status);
+            Tvsync =(ImageView) lnout.findViewById(R.id.sync);
             lnyNotes = lnout.findViewById(R.id.lnyNotes);
-
-
 
         }
     }
@@ -57,7 +63,7 @@ public class notesAdapter extends RecyclerView.Adapter<notesAdapter.MyViewHolder
 //
 //    }
 
-    public notesAdapter(Context context, List<Notes>notesList,RecyclerView rv) {
+    public notesAdapter(Context context, ArrayList<Notes>notesList,RecyclerView rv) {
 
         contx = context; // context of notesAdapter
         this.mynotes = notesList;
@@ -83,6 +89,16 @@ public class notesAdapter extends RecyclerView.Adapter<notesAdapter.MyViewHolder
             Notes notes = mynotes.get(position);
             holder.Tvtitle.setText(notes.getTitles());
             holder.Tvtext.setText(notes.getText());
+            int Tvsync= notes.getSync();
+            if(Tvsync==mdatabase.sync_status_ok)
+            {
+              holder.Tvsync.setImageResource(R.drawable.ic_done);
+            }
+            else
+            {
+                holder.Tvsync.setImageResource(R.drawable.ic_sync);
+            }
+
             mdatabase = new databaseHelper(contx);
 
 

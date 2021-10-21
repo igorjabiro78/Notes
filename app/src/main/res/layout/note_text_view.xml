@@ -73,17 +73,17 @@
 
                 />
 
-            <TextView
-                android:id="@+id/status"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="status"
+            <ImageView
+                android:id="@+id/sync"
+                android:layout_width="25dp"
+                android:layout_height="25dp"
                 android:layout_marginTop="6dp"
                 android:layout_below="@id/date"
                 android:layout_alignParentRight="true"
-                android:background="@color/orange"
-
+                android:src="@drawable/ic_done"
+                android:layout_centerVertical="true"
                 />
+
 
 
 

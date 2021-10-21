@@ -5,11 +5,16 @@ import androidx.fragment.app.FragmentTransaction;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -22,6 +27,8 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.example.notes.Database.databaseHelper.sync_status_failed;
+
 public class MainActivity extends Fragment {
 
     ReminderDatabase databaseClass;
@@ -32,8 +39,9 @@ public class MainActivity extends Fragment {
     private RecyclerView.LayoutManager layoutManager;
     com.example.notes.Database.databaseHelper databaseHelper;
     notesAdapter notesAdapter;
-    List<Notes> mynoteList = new ArrayList<Notes>();
+    ArrayList<Notes> mynoteList = new ArrayList<>();
 
+    BroadcastReceiver broadcastReceiver;
 
     public FloatingActionButton reminder;
 
@@ -50,24 +58,33 @@ public class MainActivity extends Fragment {
         noteRecycle = view.findViewById(R.id.noteRecycle);
         layoutManager = new LinearLayoutManager(view.getContext());
         noteRecycle.setLayoutManager(layoutManager);
+        noteRecycle.setHasFixedSize(true);
         reminder = view.findViewById(R.id.reminder);
 
-        
 
+        checkNetworkConnections(ctx);
+
+        checkNetworkConnection(ctx);
 //        databaseClass = ReminderDatabase.getDatabase(ctx);
 
         databaseHelper = new databaseHelper(ctx);
 
-        SQLiteDatabase sqLiteDatabase = databaseHelper.getWritableDatabase();
+//        SQLiteDatabase sqLiteDatabase = databaseHelper.getWritableDatabase();
 
-//        Toast.makeText(ctx,"here we go",Toast.LENGTH_LONG).show();
-        mynoteList = databaseHelper.getAll();
-        notesAdapter = new notesAdapter(ctx,mynoteList,noteRecycle);
+
+//        mynoteList = databaseHelper.getAll();
+//        notesAdapter = new notesAdapter(ctx,mynoteList,noteRecycle);// comment this out
+        notesAdapter = new notesAdapter(mynoteList);
         noteRecycle.setAdapter(notesAdapter);
 
+        readFromLocalStorage();
 
-
-
+        broadcastReceiver= new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+               readFromLocalStorage();
+            }
+        };
 
         fabnote.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -89,30 +106,30 @@ public class MainActivity extends Fragment {
             }
         });
 
-
-
-//      fetch_Data(add_notes.getuserid(ctx));
         return view;
 
 
     }
-    private void displayList(List<Notes> allNotes) {
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        ctx.registerReceiver(broadcastReceiver,new IntentFilter(NetworkMonitor.UI_UPDATE_BROADCAST));
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        ctx.unregisterReceiver(broadcastReceiver);
+    }
+
+    private void displayList(ArrayList<Notes> allNotes) {
         noteRecycle.setLayoutManager(new LinearLayoutManager(ctx));
         notesAdapter = new notesAdapter(ctx,allNotes,noteRecycle);
         noteRecycle.setAdapter(notesAdapter);
     }
 
-//    private void setAdapter() {
-//        List<EntityClass> classList = databaseClass.EventDao().getAllData();
-//        eventAdapter = new EventAdapter(ctx.getApplicationContext(), classList);
-//        recyclerview.setAdapter(eventAdapter);
-//    }
 
-    /*aho bigeze,
-      - check set adapter class and entity class
-      - test project
-      - also view other notes app that used sqlitez
-    * */
 
     @Override
     public void onResume() {
@@ -121,9 +138,59 @@ public class MainActivity extends Fragment {
 //        fetch_Data(add_notes.getuserid(ctx));
     }
 
+     public  void readFromLocalStorage()
+     {
+         mynoteList.clear();
+         databaseHelper = new databaseHelper(ctx);
+         SQLiteDatabase database = databaseHelper.getReadableDatabase();
+
+         Cursor cursor = databaseHelper.readfromLocalDatabase(database);
+         while(cursor.moveToNext())
+         {
+             String title = cursor.getString(cursor.getColumnIndex(com.example.notes.Database.databaseHelper.titles));
+             String mynotes = cursor.getString(cursor.getColumnIndex(com.example.notes.Database.databaseHelper.mynotes));
+             int sync = cursor.getInt(cursor.getColumnIndex(com.example.notes.Database.databaseHelper.SYNC_STATUS));
+             Notes notes = new Notes(title,mynotes,sync);
+
+             mynoteList.add(notes);
+
+         }
+         notesAdapter.notifyDataSetChanged();
+         cursor.close();
+         databaseHelper.close();
+     }
 
 
+    public boolean checkNetworkConnections(Context context)
+    {
+        ConnectivityManager connectivityManager =  (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo networkInfo  =connectivityManager.getActiveNetworkInfo();
+        return(networkInfo!=null && networkInfo.isConnected());
+//        if(connectivityManager.getNetworkInfo(ConnectivityManager.TYPE_MOBILE).getState() == NetworkInfo.State.CONNECTED ||
+//                connectivityManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI).getState() == NetworkInfo.State.CONNECTED)
+//        {
+//            Log.d("application","Network available");
+//            return true;
+//        }else{
+//            Log.d("application","Networrk not available");
+//            return false;
+    }
 
+    public boolean checkNetworkConnection(Context context)
+    {
+        ConnectivityManager connectivityManager =  (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+        if(connectivityManager.getNetworkInfo(ConnectivityManager.TYPE_MOBILE).getState() == NetworkInfo.State.CONNECTED ||
+                connectivityManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI).getState() == NetworkInfo.State.CONNECTED)
+        {
+            Log.d("application","Network available");
+            return true;
+        }else{
+            Log.d("application","Networrk not available");
+            return false;
+        }
+
+
+    }
 
 
 

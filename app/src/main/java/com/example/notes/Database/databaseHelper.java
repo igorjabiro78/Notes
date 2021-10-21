@@ -13,32 +13,42 @@ import androidx.annotation.Nullable;
 import com.example.notes.Notes;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
-import javax.sql.DataSource;
+
 
 public class databaseHelper extends SQLiteOpenHelper {
 
     public static final String notes_table = "notes_table";
+    public static final int database_version = 1;
+
+    public static final int sync_status_ok = 0;
+    public static final int sync_status_failed = 1;
 
     public static final String mynotes = "text";
     public static final String titles = "title";
     public static final String noteid = "id";
-    public static final String Database_name = "notes.db";
+    public static final String SYNC_STATUS = "sync";
+//    public static final String date = "date_created";    for dates created
+
+    public static final String Database_name = "notes";
     public static final String Drop_Table = "drop table if exists "+notes_table;
     private Context context;
 
     public databaseHelper( Context context) {
 
-        super(context, Database_name, null, 1);
+        super(context, Database_name, null, database_version);
     }
 
     @Override
     public void onCreate(SQLiteDatabase db) {
-        String createTableStatement= " CREATE TABLE " + notes_table + "(" + noteid + " INTEGER PRIMARY KEY AUTOINCREMENT, " + titles + " TEXT, "+
-                mynotes + " TEXT)";
+        String createTableStatement= "CREATE TABLE " + notes_table + " (id integer primary key autoincrement, " + titles + " TEXT, "+
+                mynotes + " TEXT, " + SYNC_STATUS + " TEXT);";
 
-        db.execSQL(createTableStatement);
+       db.execSQL(createTableStatement);
+
+//        db.execSQL(createTableStatement);
 //        db.insert(Database_name,null, DataSource.getDefaultCategory());
     }
 
@@ -54,18 +64,20 @@ public class databaseHelper extends SQLiteOpenHelper {
         }
     }
 
-    public  void addNotes(Notes notes){
+//    public  void addNotes(Notes notes){
+//
+//        SQLiteDatabase db= this.getWritableDatabase();
+//        ContentValues cv = new ContentValues();
+//
+//        cv.put(mynotes, notes.getText());
+//        cv.put(titles, notes.getTitles());
+//        cv.put(SYNC_STATUS, notes.getSync());
+////     here   add date created
+//        db.insert(notes_table, null, cv);
+//        db.close();
 
-        SQLiteDatabase db= this.getWritableDatabase();
-        ContentValues cv = new ContentValues();
-
-        cv.put(mynotes, notes.getText());
-        cv.put(titles, notes.getTitles());
-        db.insert(notes_table, null, cv);
-        db.close();
 
 
-    }
 
     //
 //
@@ -90,8 +102,7 @@ public class databaseHelper extends SQLiteOpenHelper {
         sqLiteDatabase.close();
     }
 
-    //
-//
+
     public ArrayList<Notes> getAll() {
         ArrayList<Notes> returnList = new ArrayList<>();
         String querry = "SELECT * FROM "+notes_table;
@@ -103,8 +114,9 @@ public class databaseHelper extends SQLiteOpenHelper {
                 int id= cursor.getInt(0);
                 String titles= cursor.getString(1);
                 String texts = cursor.getString(2);
+                int sync = cursor.getInt(3);
 
-                Notes notes = new Notes(id,titles,texts);
+                Notes notes = new Notes(titles,texts,sync);
                 returnList.add(notes);
             }
             while (cursor.moveToNext());
@@ -119,24 +131,44 @@ public class databaseHelper extends SQLiteOpenHelper {
 
     //
 //
-//
-    public void updateCourse(Notes notes) {
+   public void saveToLocalDatabase(String title,String mynote,int sync){
+
+       SQLiteDatabase db= this.getWritableDatabase();
+       ContentValues cv = new ContentValues();
+       cv.put(titles, title);
+       cv.put(mynotes, mynote);
+       cv.put(SYNC_STATUS, sync);
+
+       db.insert(notes_table, null, cv);
+       db.close();
+
+
+   }
+
+    public void updateLocalDatabase(String title,String name,int sync) {
 
         // calling a method to get writable database.
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues cv = new ContentValues();
 
         //  passing all value along with its key and value pair.
-        cv.put(titles, notes.getTitles());
-        cv.put(mynotes, notes.getText());
+//        cv.put(titles, title);
+//        cv.put(mynotes, name);
+        cv.put(SYNC_STATUS, sync);
+        String selection = titles+" LIKE ?";
+        String [] selection_args = {title,name};
 
         //  calling a update method to update our database and passing our values.
 
-        db.update(notes_table, cv,noteid+ "	= ?", new String[] { String.valueOf(Notes.getId())});
+        db.update(notes_table, cv,selection, selection_args);
         db.close();
     }
-//
-//
+
+    public Cursor readfromLocalDatabase(SQLiteDatabase database)
+    {
+        String[] projection = {titles,mynotes,SYNC_STATUS};
+        return (database.query(notes_table,projection,null,null,null,null,null));
+    }
 
 
 
