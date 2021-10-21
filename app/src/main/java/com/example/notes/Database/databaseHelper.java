@@ -64,37 +64,7 @@ public class databaseHelper extends SQLiteOpenHelper {
         }
     }
 
-//    public  void addNotes(Notes notes){
-//
-//        SQLiteDatabase db= this.getWritableDatabase();
-//        ContentValues cv = new ContentValues();
-//
-//        cv.put(mynotes, notes.getText());
-//        cv.put(titles, notes.getTitles());
-//        cv.put(SYNC_STATUS, notes.getSync());
-////     here   add date created
-//        db.insert(notes_table, null, cv);
-//        db.close();
 
-
-
-
-    //
-//
-//
-//    public boolean DeleteNotes(Notes notes){
-//        SQLiteDatabase db = this.getWritableDatabase();
-//        String queryString = "DELETE FROM "+ notes_table +" WHERE "+noteid+" = "+Notes.getId();
-//        Cursor cursor = db.rawQuery(queryString, null);
-//        if(cursor.moveToFirst()){
-//            return true;
-//        }
-//        else{
-//            return false;
-//        }
-//
-//    }
-//
     public void delete(String ID) {
         SQLiteDatabase sqLiteDatabase = this.getWritableDatabase();
         //deleting row

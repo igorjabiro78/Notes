@@ -166,14 +166,7 @@ public class MainActivity extends Fragment {
         ConnectivityManager connectivityManager =  (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo networkInfo  =connectivityManager.getActiveNetworkInfo();
         return(networkInfo!=null && networkInfo.isConnected());
-//        if(connectivityManager.getNetworkInfo(ConnectivityManager.TYPE_MOBILE).getState() == NetworkInfo.State.CONNECTED ||
-//                connectivityManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI).getState() == NetworkInfo.State.CONNECTED)
-//        {
-//            Log.d("application","Network available");
-//            return true;
-//        }else{
-//            Log.d("application","Networrk not available");
-//            return false;
+//
     }
 
     public boolean checkNetworkConnection(Context context)

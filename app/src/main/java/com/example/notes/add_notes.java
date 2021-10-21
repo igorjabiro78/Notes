@@ -81,7 +81,6 @@ public class add_notes extends AppCompatActivity {
 
                 try {
 
-
                     if(mynotes.getText().toString().equals("") || title.getText().toString().equals(""))
                         Toast.makeText(ctx,"empty",Toast.LENGTH_SHORT).show();
                     else
@@ -146,8 +145,6 @@ public class add_notes extends AppCompatActivity {
               MySingleton.getInstance(add_notes.this).addToRequestque(stringRequest);
 
 
-
-
             }
         });
         ocr.setOnClickListener(new View.OnClickListener() {
@@ -162,15 +159,6 @@ public class add_notes extends AppCompatActivity {
         });
 
     }
-
-//    public void addmyTexts(View view){
-//        String titles = title.getText().toString();
-//        String text =mynotes.getText().toString();
-//        Notes notes = new Notes(titles,text,sync_status_failed);
-//        databasehelper.saveToLocalDatabase(titles,text,sy);
-////
-//    }
-
 
 
     public void saveToAppServer(String title,String name){
