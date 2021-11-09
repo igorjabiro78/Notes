@@ -2,6 +2,7 @@ package com.example.notes;
 
 import android.content.Context;
 import android.content.DialogInterface;
+import android.database.sqlite.SQLiteDatabase;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -12,20 +13,29 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.notes.Database.databaseHelper;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
+
 public class deleteAdapter extends RecyclerView.Adapter<deleteAdapter.MyViewHolder> {
 
-private JSONArray deletednotes;
-public LinearLayout ln;
-public Context contx;
+    private ArrayList<Notes> mynotes = new ArrayList<>();
+    private JSONArray deletednotes;
+    public LinearLayout ln;
+    public Context contx;
+    public databaseHelper mdatabase;
+    RecyclerView rv;
 
 public static class MyViewHolder extends RecyclerView.ViewHolder {
 
     public TextView TvId,Tvtext,Tvtitle, Tvdate, Tvstat;
+
 //        public LinearLayout lnProduct;
+
 
     public MyViewHolder(LinearLayout lnout) {
         super(lnout);
@@ -39,11 +49,17 @@ public static class MyViewHolder extends RecyclerView.ViewHolder {
     }
 }
 
-    public deleteAdapter(Context context, JSONArray notedata) {
-        deletednotes = notedata;
-        contx = context;
-    }
+//
+    public deleteAdapter(Context context, ArrayList<Notes> notesList, RecyclerView rv) {
 
+        contx = context; // context of deleteAdapter
+        this.mynotes = notesList;
+        this.rv = rv;
+
+    }
+    public deleteAdapter(ArrayList<Notes> arrayList){
+    mynotes = arrayList;
+    }
     @Override
     public deleteAdapter.MyViewHolder onCreateViewHolder(ViewGroup parent,
                                                          int viewType) {
@@ -57,14 +73,13 @@ public static class MyViewHolder extends RecyclerView.ViewHolder {
 
     @Override
     public void onBindViewHolder(@NonNull final MyViewHolder holder, int position) {
-        try {
-            JSONObject object = deletednotes.getJSONObject(position);
-            holder.TvId.setText(object.getString("id"));
-            holder.Tvtitle.setText(object.getString("Title")); // object.getString is used when you are fetching from serverfu
-            holder.Tvtext.setText(object.getString("Text")); // object.getString is used when you are fetching from serverfu
-            holder.Tvstat.setText(object.getString("Status"));
-            holder.Tvdate.setText(object.getString("created_at"));
 
+            Notes notes= mynotes.get(position);
+
+            holder.Tvtitle.setText(notes.getTitles()); // object.getString is used when you are fetching from serverfu
+            holder.Tvtext.setText(notes.getText()); // object.getString is used when you are fetching from serverfu
+            holder.Tvstat.setText(notes.getSync());
+            holder.Tvdate.setText((CharSequence) mdatabase.created_date);
 
 
             holder.Tvtext.setOnLongClickListener(new View.OnLongClickListener() {
@@ -140,17 +155,15 @@ public static class MyViewHolder extends RecyclerView.ViewHolder {
             });
 
 
-        } catch (JSONException ex) {
-
         }
-    }
+
 
 
 
     @Override
     public int getItemCount() {
 
-        return deletednotes.length();
+        return mynotes.size();
     }
 }
 

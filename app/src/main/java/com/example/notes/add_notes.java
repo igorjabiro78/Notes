@@ -48,7 +48,7 @@ public class add_notes extends AppCompatActivity {
 
     //added code
     AlertDialog.Builder builder;
-    public static String server_url = "http://10.0.2.2/Connotes.php";
+    public static String server_url = "http:// 127.0.0.1:82/myCon.php";
     private RequestQueue requestQueue;
     private String tag_json_obj="json_obj_req";
     private String tag_success="success",tag_message="message";
@@ -71,6 +71,9 @@ public class add_notes extends AppCompatActivity {
         title = findViewById(R.id.edittitle);
         ocr = findViewById(R.id.ocr);
         stay = findViewById(R.id.stay);
+//        String check = String.valueOf(checkNetworkConnection());
+//
+//        Toast.makeText(ctx,"checkNetworkConnection()",Toast.LENGTH_LONG).show();
 
         requestQueue = Volley.newRequestQueue(getApplicationContext());
 
@@ -81,15 +84,24 @@ public class add_notes extends AppCompatActivity {
 
                 try {
 
-                    if(mynotes.getText().toString().equals("") || title.getText().toString().equals(""))
-                        Toast.makeText(ctx,"empty",Toast.LENGTH_SHORT).show();
-                    else
-                        saveToAppServer(title.getText().toString(),mynotes.getText().toString());
+                    if(mynotes.getText().toString().equals("") || title.getText().toString().equals("")) {
+                        Toast.makeText(ctx, "empty", Toast.LENGTH_SHORT).show();
+                    }
+                   String inserted = mynotes.getText().toString();
+                    String newText;
+                     if(inserted.length()>80) {
+                         newText = inserted.substring(0, 80) + " ....";
+                     }
+                     else {
+                     newText = mynotes.getText().toString();
+
+                     }
+
+                        saveToAppServer(title.getText().toString(),newText);
                         Toast.makeText(add_notes.this,"saved",Toast.LENGTH_LONG).show();
 
-
                     //to do : check for internet connection  first
-                    sendData();
+//                    sendData();
 
                 }
                 catch (Exception e){
@@ -105,44 +117,44 @@ public class add_notes extends AppCompatActivity {
                     startActivity(new Intent(ctx,Notes_Tabs.class));
                 }
 
-            // added code to connect to db
-            StringRequest stringRequest = new StringRequest(Request.Method.POST, server_url,
-                    new Response.Listener<String>() {
-                        @Override
-                        public void onResponse(String response) {
-                            builder.setTitle("Server Response");
-                            builder.setMessage("response: "+response);
-                            builder.setPositiveButton("ok", new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialog, int which) {
-                                    title.setText("");
-                                    mynotes.setText("");
-                                }
-                            });
-                            AlertDialog alertDialog = builder.create();
-                            alertDialog.show();
-                        }
-                    }
-                    , new Response.ErrorListener() {
-                @Override
-                public void onErrorResponse(VolleyError error) {
-
-                    Toast.makeText(add_notes.this,"Error..",Toast.LENGTH_LONG).show();
-                    error.printStackTrace();
-
-                }
-            }){
-                @Override
-                protected Map<String, String> getParams() throws AuthFailureError {
-                    Map<String, String> params = new HashMap<>();
-                    params.put("title",title.getText().toString());
-                    params.put("text",mynotes.getText().toString());
-
-                    return params;
-                }
-            };
-
-              MySingleton.getInstance(add_notes.this).addToRequestque(stringRequest);
+//            // added code to connect to db
+//            StringRequest stringRequest = new StringRequest(Request.Method.POST, server_url,
+//                    new Response.Listener<String>() {
+//                        @Override
+//                        public void onResponse(String response) {
+//                            builder.setTitle("Server Response");
+//                            builder.setMessage("response: "+response);
+//                            builder.setPositiveButton("ok", new DialogInterface.OnClickListener() {
+//                                @Override
+//                                public void onClick(DialogInterface dialog, int which) {
+//                                    title.setText("");
+//                                    mynotes.setText("");
+//                                }
+//                            });
+//                            AlertDialog alertDialog = builder.create();
+//                            alertDialog.show();
+//                        }
+//                    }
+//                    , new Response.ErrorListener() {
+//                @Override
+//                public void onErrorResponse(VolleyError error) {
+//
+//                    Toast.makeText(add_notes.this,"Error..",Toast.LENGTH_LONG).show();
+//                    error.printStackTrace();
+//
+//                }
+//            }){
+//                @Override
+//                protected Map<String, String> getParams() throws AuthFailureError {
+//                    Map<String, String> params = new HashMap<>();
+//                    params.put("title",title.getText().toString());
+//                    params.put("text",mynotes.getText().toString());
+//
+//                    return params;
+//                }
+//            };
+//
+//              MySingleton.getInstance(add_notes.this).addToRequestque(stringRequest);
 
 
             }
@@ -168,7 +180,7 @@ public class add_notes extends AppCompatActivity {
 
 
 
-        if(checkNetworkConnections(ctx)){
+        if(checkNetworkConnection()){
 
             sendData();
         }
@@ -177,8 +189,8 @@ public class add_notes extends AppCompatActivity {
             saveToLocalStorages(title,name,sync_status_failed);
 
         }
-        MainActivity mainActivity = new MainActivity();
-        mainActivity.readFromLocalStorage();
+//        MainActivity mainActivity = new MainActivity();
+//        mainActivity.readFromLocalStorage();
        databasehelper.close();
 
     }
@@ -186,11 +198,10 @@ public class add_notes extends AppCompatActivity {
     public void saveToLocalStorages(String title,String name,int sync){
 
         databasehelper = new databaseHelper(ctx);
-        SQLiteDatabase database = databasehelper.getWritableDatabase();
+
         databasehelper.saveToLocalDatabase(title,name,sync);
 
-        MainActivity mainActivity = new MainActivity();
-        mainActivity.readFromLocalStorage();
+
         databasehelper.close();
 
 
@@ -200,37 +211,22 @@ public class add_notes extends AppCompatActivity {
 
     public boolean checkNetworkConnection()
     {
-        ConnectivityManager connectivityManager =  (ConnectivityManager) ctx.getSystemService(Context.CONNECTIVITY_SERVICE);
-        if(connectivityManager.getNetworkInfo(ConnectivityManager.TYPE_MOBILE).getState() == NetworkInfo.State.CONNECTED ||
-                connectivityManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI).getState() == NetworkInfo.State.CONNECTED)
-        {
-            Log.d("application","Network available");
-            return true;
-        }else{
-            Log.d("application","Networrk not available");
-            return false;
+        boolean haveConnectedWifi = false;
+        boolean haveConnectedMobile = false;
+
+        ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo[] netInfo = cm.getAllNetworkInfo();
+        for (NetworkInfo ni : netInfo) {
+            if (ni.getTypeName().equalsIgnoreCase("WIFI"))
+                if (ni.isConnected())
+                    haveConnectedWifi = true;
+            if (ni.getTypeName().equalsIgnoreCase("MOBILE"))
+                if (ni.isConnected())
+                    haveConnectedMobile = true;
         }
-
+        return haveConnectedWifi || haveConnectedMobile;
 
     }
-
-    public boolean checkNetworkConnections(Context context)
-    {
-        ConnectivityManager connectivityManager =  (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkInfo networkInfo  =connectivityManager.getActiveNetworkInfo();
-        return(networkInfo!=null && networkInfo.isConnected());
-//        if(connectivityManager.getNetworkInfo(ConnectivityManager.TYPE_MOBILE).getState() == NetworkInfo.State.CONNECTED ||
-//                connectivityManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI).getState() == NetworkInfo.State.CONNECTED)
-//        {
-//            Log.d("application","Network available");
-//            return true;
-//        }else{
-//            Log.d("application","Networrk not available");
-//            return false;
-    }
-
-
-
 
 
     private void sendData(){

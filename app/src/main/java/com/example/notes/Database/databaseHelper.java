@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import java.util.Date;
 
 
 public class databaseHelper extends SQLiteOpenHelper {
@@ -30,11 +31,16 @@ public class databaseHelper extends SQLiteOpenHelper {
     public static final String titles = "title";
     public static final String noteid = "id";
     public static final String SYNC_STATUS = "sync";
+    public static final Date created_date = null;
+    
 //    public static final String date = "date_created";    for dates created
 
     public static final String Database_name = "notes";
     public static final String Drop_Table = "drop table if exists "+notes_table;
     private Context context;
+//    Date date = new Date();
+    long millis=System.currentTimeMillis();
+    java.sql.Date date =new java.sql.Date(millis);
 
     public databaseHelper( Context context) {
 
@@ -44,7 +50,8 @@ public class databaseHelper extends SQLiteOpenHelper {
     @Override
     public void onCreate(SQLiteDatabase db) {
         String createTableStatement= "CREATE TABLE " + notes_table + " (id integer primary key autoincrement, " + titles + " TEXT, "+
-                mynotes + " TEXT, " + SYNC_STATUS + " TEXT);";
+                mynotes + " TEXT, "  + SYNC_STATUS + " TEXT);";
+//        " + created_date + " timestamp
 
        db.execSQL(createTableStatement);
 
@@ -65,10 +72,10 @@ public class databaseHelper extends SQLiteOpenHelper {
     }
 
 
-    public void delete(String ID) {
+    public void delete(String id) {
         SQLiteDatabase sqLiteDatabase = this.getWritableDatabase();
         //deleting row
-        sqLiteDatabase.delete(notes_table, "ID=" + ID, null);
+        sqLiteDatabase.delete(notes_table, "ID=" + id, new String[]{String.valueOf(id)});
         sqLiteDatabase.close();
     }
 
@@ -103,11 +110,14 @@ public class databaseHelper extends SQLiteOpenHelper {
 //
    public void saveToLocalDatabase(String title,String mynote,int sync){
 
+
        SQLiteDatabase db= this.getWritableDatabase();
        ContentValues cv = new ContentValues();
        cv.put(titles, title);
        cv.put(mynotes, mynote);
        cv.put(SYNC_STATUS, sync);
+//       cv.put(String.valueOf(created_date),String.valueOf(date));
+
 
        db.insert(notes_table, null, cv);
        db.close();
@@ -125,6 +135,7 @@ public class databaseHelper extends SQLiteOpenHelper {
 //        cv.put(titles, title);
 //        cv.put(mynotes, name);
         cv.put(SYNC_STATUS, sync);
+//        cv.put(String.valueOf(created_date),String.valueOf(date));
         String selection = titles+" LIKE ?";
         String [] selection_args = {title,name};
 
@@ -140,6 +151,14 @@ public class databaseHelper extends SQLiteOpenHelper {
         return (database.query(notes_table,projection,null,null,null,null,null));
     }
 
+    public void updateNotes(String title,String note){
+        ContentValues contentValues = new ContentValues();
+        contentValues.put(mynotes,note);
+        contentValues.put(titles,title);
+        SQLiteDatabase db = this.getWritableDatabase();
+        db.update(notes_table,contentValues,noteid + " = ?",null);
+
+    }
 
 
 }

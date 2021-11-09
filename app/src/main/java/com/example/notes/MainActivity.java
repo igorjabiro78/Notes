@@ -1,10 +1,17 @@
 package com.example.notes;
 
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.ActionBarDrawerToggle;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
+import androidx.core.view.GravityCompat;
+import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -16,13 +23,17 @@ import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 
 import com.example.notes.Database.ReminderDatabase;
 import com.example.notes.Database.databaseHelper;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.android.material.navigation.NavigationView;
+import com.google.android.material.tabs.TabLayout;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,6 +44,12 @@ public class MainActivity extends Fragment {
 
     ReminderDatabase databaseClass;
 //    EventAdapter eventAdapter;
+
+    ActionBarDrawerToggle toggle;
+    public DrawerLayout drawerLayout;
+    private TabLayout tabLayout;
+    public NavigationView navigationView;
+
 
     public FloatingActionButton fabnote;
     private RecyclerView noteRecycle;
@@ -53,31 +70,33 @@ public class MainActivity extends Fragment {
 
         ctx= view.getContext();
 
+
+
         fabnote = view.findViewById(R.id.addnote);
         //for recycle view
         noteRecycle = view.findViewById(R.id.noteRecycle);
         layoutManager = new LinearLayoutManager(view.getContext());
         noteRecycle.setLayoutManager(layoutManager);
-        noteRecycle.setHasFixedSize(true);
+
         reminder = view.findViewById(R.id.reminder);
 
 
         checkNetworkConnections(ctx);
 
-        checkNetworkConnection(ctx);
+//        checkNetworkConnection(ctx);
 //        databaseClass = ReminderDatabase.getDatabase(ctx);
 
         databaseHelper = new databaseHelper(ctx);
 
 //        SQLiteDatabase sqLiteDatabase = databaseHelper.getWritableDatabase();
 
-
-//        mynoteList = databaseHelper.getAll();
-//        notesAdapter = new notesAdapter(ctx,mynoteList,noteRecycle);// comment this out
-        notesAdapter = new notesAdapter(mynoteList);
-        noteRecycle.setAdapter(notesAdapter);
+//        notesAdapter = new notesAdapter(mynoteList);
+//        noteRecycle.setAdapter(notesAdapter);
+        displayList(mynoteList);
 
         readFromLocalStorage();
+
+
 
         broadcastReceiver= new BroadcastReceiver() {
             @Override
@@ -106,8 +125,46 @@ public class MainActivity extends Fragment {
             }
         });
 
-        return view;
 
+        //nav drawer
+//        Toolbar toolbar=view.findViewById(R.id.toolbar);
+//
+//        ((AppCompatActivity)getActivity()).setSupportActionBar(toolbar);
+//        drawerLayout=view.findViewById(R.id.drawer);
+//        tabLayout =  view.findViewById(R.id.tabs);
+//        navigationView=view.findViewById(R.id.nav_view);
+//        toggle=new ActionBarDrawerToggle((Activity) ctx,drawerLayout,toolbar,R.string.open,R.string.close);
+//        drawerLayout.addDrawerListener(toggle);
+//        toggle.setDrawerIndicatorEnabled(true);
+//        toggle.syncState();
+//
+//        navigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
+//            @Override
+//            public boolean onNavigationItemSelected(@NonNull MenuItem menuItem)
+//            {
+//                switch (menuItem.getItemId())
+//                {
+//                    case R.id.home :
+//                        Toast.makeText(ctx,"Home Panel is Open",Toast.LENGTH_LONG).show();
+//                        drawerLayout.closeDrawer(GravityCompat.START);
+//                        break;
+//
+//                    case R.id.settings :
+//                        Toast.makeText(ctx,"Setting Panel is Open",Toast.LENGTH_LONG).show();
+//                        drawerLayout.closeDrawer(GravityCompat.START);
+//                        break;
+//
+//                    case R.id.bin :
+//                        Toast.makeText(ctx,"Trash bin is Open",Toast.LENGTH_LONG).show();
+//                        drawerLayout.closeDrawer(GravityCompat.START);
+//                        break;
+//                }
+//
+//                return true;
+//            }
+//        });
+
+        return view;
 
     }
 
@@ -135,10 +192,10 @@ public class MainActivity extends Fragment {
     public void onResume() {
         super.onResume();
         displayList(mynoteList);
-//        fetch_Data(add_notes.getuserid(ctx));
+
     }
 
-     public  void readFromLocalStorage()
+     public void readFromLocalStorage()
      {
          mynoteList.clear();
          databaseHelper = new databaseHelper(ctx);
@@ -171,17 +228,21 @@ public class MainActivity extends Fragment {
 
     public boolean checkNetworkConnection(Context context)
     {
-        ConnectivityManager connectivityManager =  (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
-        if(connectivityManager.getNetworkInfo(ConnectivityManager.TYPE_MOBILE).getState() == NetworkInfo.State.CONNECTED ||
-                connectivityManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI).getState() == NetworkInfo.State.CONNECTED)
-        {
-            Log.d("application","Network available");
-            return true;
-        }else{
-            Log.d("application","Networrk not available");
-            return false;
-        }
+        boolean haveConnectedWifi = false;
+        boolean haveConnectedMobile = false;
 
+        ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo[] netInfo = cm.getAllNetworkInfo();
+        for (NetworkInfo ni : netInfo) {
+            if (ni.getTypeName().equalsIgnoreCase("WIFI"))
+                if (ni.isConnected())
+                    haveConnectedWifi = true;
+            if (ni.getTypeName().equalsIgnoreCase("MOBILE"))
+                if (ni.isConnected())
+                    haveConnectedMobile = true;
+            Toast.makeText(ctx,"internet connection",Toast.LENGTH_SHORT).show();
+        }
+        return haveConnectedWifi || haveConnectedMobile;
 
     }
 
@@ -199,52 +260,6 @@ public class MainActivity extends Fragment {
 //    }
 
 
-//    void fetch_Data(String id) {
-//        RequestQueue queue = Volley.newRequestQueue(ctx);
-//        String url = "http://192.168.43.242/www/Notes%20Project/access_Method/note_access_method.php?category=getData&useid="+id;
-//        Log.d("Req", url);
-//// Request a string response from the provided URL.
-//        StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
-//                new Response.Listener<String>() {
-//                    @Override
-//                    public void onResponse(String response) {
-//                        // Display the first 500 characters of the response string.
-////                        Toast.makeText(getApplicationContext(), response, Toast.LENGTH_SHORT).show();
-//                        try {
-//                            JSONArray array = new JSONArray(response); // copnvert string to json array
-//                            Log.d("Resp",array.toString());
-//                            if (array.length() > 0) {
-////                                String[] listExpenses = convertData(array); // convert from json to string array
-//                                //hold data to print
-//
-//                                notesAdapter adaptExpenses = new notesAdapter(ctx, array);
-//
-//                                noteRecycle.setAdapter(adaptExpenses);
-//
-//
-//                            }
-//                        } catch (JSONException e) {
-//                            e.printStackTrace();
-//                        }
-//
-//
-//                    }
-//                }, new Response.ErrorListener() {
-//            @Override
-//            public void onErrorResponse(VolleyError error) {
-//                Toast.makeText(ctx, "error " + error.getMessage(), Toast.LENGTH_SHORT).show();
-//            }
-//        });
-//
-//// Add the request to the RequestQueue.
-//        queue.add(stringRequest);
-//
-//    }
-
-
-//    public boolean checkNetworkConnection(){
-//        ConnectivityManager connectivityManager = (ConnectivityManager) this.getSystemService(getContext())
-//    }
 
 
 }

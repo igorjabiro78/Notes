@@ -33,7 +33,7 @@ public class NetworkMonitor extends BroadcastReceiver {
     public static final String UI_UPDATE_BROADCAST = "com.example.notes.uiupdatebroadcast";
     @Override
     public void onReceive(final Context context, Intent intent) {
-        if(checkNetworkConnections(context))
+        if(checkNetworkConnection(context))
         {
             final databaseHelper databaseHelper = new databaseHelper(context);
             SQLiteDatabase database = databaseHelper.getWritableDatabase();
@@ -90,16 +90,20 @@ public class NetworkMonitor extends BroadcastReceiver {
     }
     public boolean checkNetworkConnection(Context context)
     {
-        ConnectivityManager connectivityManager =  (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
-        if(connectivityManager.getNetworkInfo(ConnectivityManager.TYPE_MOBILE).getState() == NetworkInfo.State.CONNECTED ||
-                connectivityManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI).getState() == NetworkInfo.State.CONNECTED)
-        {
-            Log.d("application","Network available");
-            return true;
-        }else{
-            Log.d("application","Networrk not available");
-            return false;
+        boolean haveConnectedWifi = false;
+        boolean haveConnectedMobile = false;
+
+        ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo[] netInfo = cm.getAllNetworkInfo();
+        for (NetworkInfo ni : netInfo) {
+            if (ni.getTypeName().equalsIgnoreCase("WIFI"))
+                if (ni.isConnected())
+                    haveConnectedWifi = true;
+            if (ni.getTypeName().equalsIgnoreCase("MOBILE"))
+                if (ni.isConnected())
+                    haveConnectedMobile = true;
         }
+        return haveConnectedWifi || haveConnectedMobile;
 
 
     }
@@ -109,14 +113,7 @@ public class NetworkMonitor extends BroadcastReceiver {
         ConnectivityManager connectivityManager =  (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo networkInfo  =connectivityManager.getActiveNetworkInfo();
         return(networkInfo!=null && networkInfo.isConnected());
-//        if(connectivityManager.getNetworkInfo(ConnectivityManager.TYPE_MOBILE).getState() == NetworkInfo.State.CONNECTED ||
-//                connectivityManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI).getState() == NetworkInfo.State.CONNECTED)
-//        {
-//            Log.d("application","Network available");
-//            return true;
-//        }else{
-//            Log.d("application","Networrk not available");
-//            return false;
+
         }
 
 

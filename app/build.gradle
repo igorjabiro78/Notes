@@ -45,33 +45,36 @@ dependencies {
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'androidx.test.ext:junit:1.1.1'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
-    //noinspection GradleCompatible,GradleCompatible
-    implementation 'com.android.support:design:28.2.1'
+
+    implementation 'com.android.support:design:29.0.1'
     
         implementation "androidx.drawerlayout:drawerlayout:1.1.1"
 
-
+    implementation 'com.google.android.material:material:1.1.0'
 
     //compile 'com.android.support:support-v4:19.1.0'
 
     compile files('libs/android-async-http-1.4.4.jar')
 
     implementation 'com.android.volley:volley:1.1.1' // http request
-    implementation 'com.google.android.material:material:1.1.0'
+
     implementation fileTree(include: ['*.jar', '*.so'], dir: 'libs')
 
     annotationProcessor 'android.arch.persistence.room:compiler:1.1.1'
 //    implementation 'com.loopj.android:android-async-http:1.4.9'
     implementation 'android.arch.persistence.room:runtime:1.1.1'
+    implementation 'com.google.android.material:material:1.0.0'
 
     // barcode,qrcode and ocr
     implementation 'com.google.android.gms:play-services-vision:9.4.0+'
 
+    implementation 'com.android.support:design:29.0.0'
+    implementation 'androidx.appcompat:appcompat:1.0.0'
 
     //syncing
-    implementation 'com.android.support:appcompat-v7'
+//    implementation 'com.android.support:appcompat-v7.app.AppCompatActivity'
 //    implementation 'org.apache.directory.studio:org.apache.commons.io:2.4'
     implementation 'com.google.code.gson:gson:2.2.4'
-//    compile files('libs/java-json.jar')
+
 
 }

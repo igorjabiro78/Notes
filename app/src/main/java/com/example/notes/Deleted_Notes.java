@@ -22,14 +22,21 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
+import com.example.notes.Database.databaseHelper;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 
+import java.util.ArrayList;
+
 public class Deleted_Notes extends Fragment {
     private RecyclerView deleteRecycle;
     private RecyclerView.LayoutManager layoutManager;
+    com.example.notes.Database.databaseHelper databaseHelper;
     public Context ctx;
+    ArrayList<Notes> mynoteList = new ArrayList<>();
+
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -42,8 +49,12 @@ public class Deleted_Notes extends Fragment {
         layoutManager = new LinearLayoutManager(view.getContext());
         deleteRecycle.setLayoutManager(layoutManager);
 
-        fetch_info(add_notes.getuserid(ctx));
+//        fetch_info(add_notes.getuserid(ctx));
 
+
+        databaseHelper = new databaseHelper(ctx);
+       deleteAdapter deleteAdapter = new deleteAdapter(mynoteList);
+       deleteRecycle.setAdapter(deleteAdapter);
 
 
        return view;
@@ -52,54 +63,19 @@ public class Deleted_Notes extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
-        fetch_info(add_notes.getuserid(ctx));
+//        fetch_info(add_notes.getuserid(ctx));
     }
     @Override
     public void onAttach(Context ctx){
         super.onAttach(ctx);
         this.ctx = ctx;
-        fetch_info(add_notes.getuserid(ctx));
+//        fetch_info(add_notes.getuserid(ctx));
     }
 
-    void fetch_info(String id) {
-        RequestQueue queue = Volley.newRequestQueue(ctx);
-        String url = "http://192.168.43.242/www/Notes%20Project/access_Method/note_access_method.php?category=getDeletedNotes&useid="+id;
-        Log.d("Req", url);
-// Request a string response from the provided URL.
-        StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
-                new Response.Listener<String>() {
-                    @Override
-                    public void onResponse(String response) {
-                        // Display the first 500 characters of the response string.
-//                        Toast.makeText(getApplicationContext(), response, Toast.LENGTH_LONG).show();
-                        //convert string into JSONArray format
-                        try {
 
-                            JSONArray array = new JSONArray(response); // convert STRING INTO jSON ARRAY
-                            if (array.length() > 0) {
-                                // String[] listData = fetchnames(array);//convert Json Array into string array
-
-//
-                                deleteAdapter adapterIncome = new deleteAdapter(ctx, array);
-                                Toast.makeText(ctx,"hello",Toast.LENGTH_LONG).show();
-                                deleteRecycle.setAdapter(adapterIncome);
-                            }
-                        } catch (JSONException ex) {
-
-                        }
-                    }
-                }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                Toast.makeText(ctx, "error " + error.getMessage(), Toast.LENGTH_SHORT).show();
-            }
-        });
-
-// Add the request to the RequestQueue.
-        queue.add(stringRequest);
 
     }
 
 
 
-}
+
